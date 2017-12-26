@@ -1,0 +1,31 @@
+datadir = r'C:\Chen\flow cytometry\XC290 12-14-17 mitoSOX'
+datafile = r'C:\Chen\flow cytometry\XC290 12-14-17 mitoSOX\A01 rSCC61 DMSO.001.fcs'
+
+from FlowCytometryTools import FCMeasurement
+A01 = FCMeasurement (ID='rSCC61 DMSO',datafile = datafile)
+print A01.channels
+print A01.data[['FSC-A']][:10]
+A01.data.to_csv(r'C:\Chen\flow cytometry\XC290 12-14-17 mitoSOX\A01.csv',sep=',')
+print A01.data['FL2-A'].describe()
+
+from FlowCytometryTools import PolyGate
+A01.view_interactively()
+gate2 = PolyGate([(2.487e+06, 3.565e+06), (3.384e+06, 1.917e+06), (1.124e+07, 6.669e+06), (9.516e+06, 8.126e+06), (2.487e+06, 3.565e+06)], ('FSC-A', 'FSC-H'), region='in', name='gate2')
+A01.gate(gate2).plot('FL2-A',bins=100)
+A01.gate(gate2).transform('hlog',channels = ['FL2-A'],b=1000).plot('FL2-A',bins=100)
+A01.gate(gate2).data.to_csv(r'C:\Chen\flow cytometry\XC290 12-14-17 mitoSOX\A01.csv',sep=',')
+
+figure()
+subplots_adjust(hspace=1)
+ax1=subplot(211)
+A01.transform('hlog',channels = ['FL2-A'],b=1000).plot('FL2-A',color='gray',bins=100)
+title('Original Sample')
+ax2 = subplot(212, sharey=ax1, sharex=ax1)
+A01.gate(gate2).transform('hlog',channels = ['FL2-A'],b=1000).plot('FL2-A',color='y',bins=100)
+title('Gated Sample')
+
+from FlowCytometryTools import FCPlate
+XC290=FCPlate.from_dir(ID='XC290',path=datadir,parser='number')
+print XC290
+XC290 = XC290.dropna()
+XC290_gated=XC290.gate(gate2)
